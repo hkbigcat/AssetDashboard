@@ -43,6 +43,22 @@ const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()).fil
 app.use(cors(corsOrigins?.length ? { origin: corsOrigins } : undefined));
 app.use(express.json());
 
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Office Assets Location Dashboard API',
+    status: 'running',
+    mqtt: getMqttStatus(),
+    endpoints: {
+      health: '/api/health',
+      state: '/api/state',
+      mqtt: '/api/mqtt',
+      pirDebug: '/api/debug/pir',
+      websocket: '/ws',
+    },
+    note: 'This is the backend API. The web dashboard UI is hosted separately (e.g. on Vercel).',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

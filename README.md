@@ -205,7 +205,7 @@ Use [Render](https://render.com) with the included `render.yaml`, or create a **
 | Start Command | `npm start` |
 | Health Check Path | `/api/health` |
 
-Note the public URL, e.g. `https://assets-dashboard-api.onrender.com`.
+Note the public URL, e.g. `https://assetdashboard.onrender.com`. Visiting `/` shows API info; `/api/health` confirms the service is up.
 
 On the backend host, set:
 
@@ -220,7 +220,7 @@ On the backend host, set:
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `VITE_API_URL` | `https://assets-dashboard-api.onrender.com` | Backend URL only — **not** your Vercel URL |
+| `VITE_API_URL` | `https://assetdashboard.onrender.com` | Backend URL only — **not** your Vercel URL |
 
 Apply to **Production** and **Preview**, then **redeploy** (env vars are baked in at build time).
 
