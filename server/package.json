@@ -1,0 +1,16 @@
+{
+  "name": "assets-dashboard-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "mqtt": "^5.10.4",
+    "ws": "^8.18.0"
+  }
+}

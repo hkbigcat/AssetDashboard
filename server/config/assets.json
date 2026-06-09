@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "sensor": "Gateway",
+      "mac_address": "ac233fc26f52",
+      "location": "East Wing - Room 101"
+    },
+    {
+      "sensor": "PIR",
+      "mac_address": "c3000060ef76",
+      "location": "East Wing - Room 101"
+    },
+    {
+      "sensor": "Beacon",
+      "mac_address": "c300005cf7a4",
+      "asset": "Epson Expression Home XP-2200 Printer",
+      "location": "East Wing - Room 101",
+      "icon": "printer"
+    },
+    {
+      "sensor": "Beacon",
+      "mac_address": "c300005cf7c6",
+      "asset": "Canon EOS R5 Mark II",
+      "location": "East Wing - Room 101",
+      "icon": "camera"
+    }
+  ]
+}
