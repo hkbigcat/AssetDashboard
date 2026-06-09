@@ -3,7 +3,7 @@ pid: 65816
 cwd: "D:\Work\Kanhan\AssetsDashboard"
 command: "Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 1; cd D:\\Work\\Kanhan\\AssetsDashboard\\server; node index.js"
 started_at: 2026-06-09T01:53:34.646Z
-running_for_ms: 18640005 
+running_for_ms: 23105002 
 ---
 Loaded sample JSON-RAW data as initial state
 Assets Dashboard API running at http://localhost:3001

@@ -12,7 +12,7 @@ export default function App() {
         <div className="header-brand">
           <div className="logo">⬡</div>
           <div>
-            <h1>Office Assets Location Dashboard</h1>
+            <h1>Star Green Media Technology Limited - Office Assets Location Dashboard</h1>
             <p className="subtitle">Real-time BLE beacon tracking via MQTT gateway</p>
           </div>
         </div>

@@ -3,7 +3,7 @@ pid: 59896
 cwd: "D:\Work\Kanhan\AssetsDashboard"
 command: "cd D:\\Work\\Kanhan\\AssetsDashboard\\client; npm run dev"
 started_at: 2026-06-09T00:57:27.270Z
-running_for_ms: 22005005 
+running_for_ms: 26475002 
 ---
 
 > assets-dashboard-client@1.0.0 dev
@@ -23,3 +23,4 @@ Port 5173 is in use, trying another one...
 下午1:35:37 [vite] (client) hmr update /src/App.jsx
 下午1:44:34 [vite] (client) hmr update /src/App.jsx
 下午1:44:34 [vite] (client) hmr update /src/App.jsx
+下午4:17:44 [vite] (client) hmr update /src/App.jsx
