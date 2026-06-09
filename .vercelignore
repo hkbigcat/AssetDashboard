@@ -1,0 +1,6 @@
+server
+docs
+terminals
+*.log
+.env
+server/.env

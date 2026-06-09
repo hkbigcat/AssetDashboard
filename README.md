@@ -164,7 +164,7 @@ AssetsDashboard/
 | `npm run install:all` | Install server and client dependencies |
 | `npm run dev` | Start backend and frontend in development |
 | `npm run build` | Build frontend for production |
-| `npm run start` | Start backend only (production) |
+| `npm run start:server` | Start backend only (production) |
 
 ## Deployment
 
@@ -183,15 +183,59 @@ The backend maintains a persistent MQTT connection and WebSocket server, so it m
 2. Set environment variables (`MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPICS`, `PORT`)
 3. Ensure the host allows outbound TCP to your MQTT broker on port 1883
 
-### Frontend
+### Frontend (Vercel)
 
-1. Build with `npm run build` in `client/`
-2. Set `VITE_API_URL` if the API is on a different host (update `useDashboard.js` accordingly)
-3. Deploy the `client/dist/` output
+Vercel hosts **only the static frontend**. The `server/` folder is excluded via `.vercelignore` — do not run the MQTT backend on Vercel (it requires a persistent connection).
+
+From the project root:
+
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+**Step 1 — Deploy the backend** (Vercel cannot run the MQTT server):
+
+Use [Render](https://render.com) with the included `render.yaml`, or deploy `server/` to Railway/Fly.io. Note the public URL, e.g. `https://assets-dashboard-api.onrender.com`.
+
+On the backend host, set:
+
+| Variable | Example |
+|----------|---------|
+| `MQTT_BROKER` | `broker.hivemq.com` |
+| `MQTT_PORT` | `1883` |
+| `MQTT_TOPICS` | `"/gw/#,gw/#"` |
+| `CORS_ORIGIN` | `https://assets-dashboard-kfhy7h9jj-ben-lee-s-projects.vercel.app` |
+
+**Step 2 — Connect the frontend** — set in Vercel → Settings → Environment Variables:
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `VITE_API_URL` | `https://assets-dashboard-api.onrender.com` | Backend URL only — **not** your Vercel URL |
+
+Apply to **Production** and **Preview**, then **redeploy** (env vars are baked in at build time).
+
+> **Common error:** `Unexpected token '<', "<!DOCTYPE"...` means `VITE_API_URL` is missing or points to the Vercel frontend. The browser is receiving `index.html` instead of JSON.
+
+**If the page is blank or shows 404:**
+
+1. Confirm `.vercelignore` excludes `server/` (prevents serverless 404 on `/`)
+2. Disable **Deployment Protection** (Vercel → Settings → Deployment Protection) if you see an authentication page instead of the dashboard
+3. Redeploy after setting `VITE_API_URL`
+
+**Alternative:** set **Root Directory** to `client` in Vercel project settings.
 
 Point your gateway MQTT publish target to the same broker configured in `MQTT_BROKER`.
 
 ## Troubleshooting
+
+### Vercel build fails with exit code 127
+
+Vercel only installs root `package.json` dependencies by default. The frontend lives in `client/` and needs its own `npm install` so `vite` is available. This project fixes that via `vercel.json` (`installCommand`). If it still fails, set **Root Directory** to `client` in Vercel project settings.
+
+### Vercel shows blank page or 404
+
+Your logs may show `source: serverless` and `responseStatusCode: 404` on `/`. That means Vercel deployed the Node.js server instead of the static frontend. Ensure `server/` is listed in `.vercelignore` and redeploy. The dashboard UI also requires `VITE_API_URL` pointing to a separately hosted backend.
 
 ### Motion always shows "Room empty"
 

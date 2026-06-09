@@ -34,7 +34,7 @@ export default function App() {
 
       {error && (
         <div className="error-banner">
-          Connection issue: {error}. Retrying...
+          <strong>Cannot reach backend API.</strong> {error}
         </div>
       )}
 

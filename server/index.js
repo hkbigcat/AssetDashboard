@@ -1,4 +1,12 @@
 import 'dotenv/config';
+
+if (process.env.VERCEL) {
+  console.error(
+    'The MQTT backend cannot run on Vercel serverless. Deploy server/ to Railway, Render, or a VPS.'
+  );
+  process.exit(1);
+}
+
 import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
@@ -31,7 +39,8 @@ setMqttBrokerInfo({
 });
 
 const app = express();
-app.use(cors());
+const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()).filter(Boolean);
+app.use(cors(corsOrigins?.length ? { origin: corsOrigins } : undefined));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {

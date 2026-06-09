@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: assets-dashboard-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: MQTT_BROKER
+        value: broker.hivemq.com
+      - key: MQTT_PORT
+        value: "1883"
+      - key: MQTT_TOPICS
+        value: '"/gw/#,gw/#"'
+      - key: CORS_ORIGIN
+        sync: false
