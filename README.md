@@ -196,7 +196,16 @@ vercel --prod
 
 **Step 1 — Deploy the backend** (Vercel cannot run the MQTT server):
 
-Use [Render](https://render.com) with the included `render.yaml`, or deploy `server/` to Railway/Fly.io. Note the public URL, e.g. `https://assets-dashboard-api.onrender.com`.
+Use [Render](https://render.com) with the included `render.yaml`, or create a **Web Service** manually:
+
+| Setting | Value |
+|---------|-------|
+| Root Directory | `server` |
+| Build Command | `npm install && npm run build` |
+| Start Command | `npm start` |
+| Health Check Path | `/api/health` |
+
+Note the public URL, e.g. `https://assets-dashboard-api.onrender.com`.
 
 On the backend host, set:
 

@@ -3,9 +3,10 @@ services:
     name: assets-dashboard-api
     runtime: node
     rootDir: server
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
+    plan: free
     envVars:
       - key: NODE_VERSION
         value: "20"
