@@ -37,19 +37,47 @@ Gateway (BLE) ──MQTT──▶ Node.js API ──WebSocket──▶ React Das
 ## Quick Start
 
 ```bash
-# Install all dependencies
+# Install all dependencies (root + server + client)
 npm run install:all
 
 # Configure environment (see below)
 cp server/.env.example server/.env
 
-# Start backend + frontend
+# Start backend + frontend together
 npm run dev
 ```
 
-Open http://localhost:5173
+Open http://localhost:5173 — API at http://localhost:3001.
 
-The API runs at http://localhost:3001.
+### macOS / Linux
+
+If you see `concurrently: command not found`, root dependencies were not installed. Either:
+
+```bash
+npm run install:all   # installs root, server, and client
+npm run dev
+```
+
+Or use the helper script:
+
+```bash
+chmod +x scripts/dev.sh
+./scripts/dev.sh
+```
+
+Or run in **two terminals** (no `concurrently` needed):
+
+```bash
+# Terminal 1
+npm run dev:server
+
+# Terminal 2
+npm run dev:client
+```
+
+### Windows
+
+Same as Quick Start above. If `concurrently` is missing, run `npm install` at the project root first.
 
 ## Environment Variables
 
