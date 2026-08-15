@@ -22,6 +22,10 @@ export default function App() {
             <span className="header-stat-label">Live Assets</span>
           </div>
           <div className="header-stat">
+            <span className="header-stat-value">{state?.rfidCount ?? '—'}</span>
+            <span className="header-stat-label">RFID Assets</span>
+          </div>
+          <div className="header-stat">
             <span className="header-stat-value">{state?.demoCount ?? '—'}</span>
             <span className="header-stat-label">Demo Assets</span>
           </div>
@@ -40,7 +44,11 @@ export default function App() {
 
       <main className="dashboard-grid">
         <RoomPanel room={state?.room} mqtt={state?.mqtt} />
-        <FloorMap assets={state?.assets} room={state?.room} />
+        <FloorMap
+          assets={state?.assets}
+          room={state?.room}
+          rfidLocations={state?.rfidLocations}
+        />
         <AssetList assets={state?.assets} />
       </main>
 

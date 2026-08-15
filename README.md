@@ -8,10 +8,11 @@ The dashboard subscribes to gateway MQTT messages, parses sensor data, and displ
 
 - **Live asset tracking** — beacon RSSI converted to estimated distance from gateway
 - **Tamper detection** — per-asset tamper status from beacon sensors
+- **RFID uploads** — handheld reader POSTs asset lists; assets appear with Source `RFID`
 - **Room monitoring** — temperature, humidity, and PIR motion occupancy (room-level only)
-- **Location map** — visual placement of live and demo assets across office zones
+- **Location map** — visual placement of live, RFID, and demo assets across office zones
 - **Asset list** — filterable table with icons, distance, tamper, and data source
-- **Real-time updates** — WebSocket push from backend on each MQTT batch
+- **Real-time updates** — WebSocket push from backend on each MQTT batch or RFID upload
 - **Demo assets** — example entries for rooms without physical beacons
 
 ## Architecture
@@ -19,6 +20,7 @@ The dashboard subscribes to gateway MQTT messages, parses sensor data, and displ
 ```
 Gateway (BLE) ──MQTT──▶ Node.js API ──WebSocket──▶ React Dashboard
                          │
+RFID reader ──HTTP POST──┤  /api/posts (:3000)
                          ├─ JSON-RAW parser (motion, RSSI, tamper)
                          └─ JSON-PARSED parser (ht, tp, ib)
 ```
@@ -26,6 +28,7 @@ Gateway (BLE) ──MQTT──▶ Node.js API ──WebSocket──▶ React Das
 | Component | Stack | Port |
 |-----------|-------|------|
 | Backend | Node.js, Express, MQTT.js, WebSocket | 3001 |
+| RFID upload API | Same Express app | 3000 (`0.0.0.0`) |
 | Frontend | React, Vite | 5173 |
 
 ## Prerequisites
@@ -47,7 +50,27 @@ cp server/.env.example server/.env
 npm run dev
 ```
 
-Open http://localhost:5173 — API at http://localhost:3001.
+Open http://localhost:5173 — API at http://localhost:3001 — RFID upload at `POST http://<host>:3000/api/posts`.
+
+### RFID reader upload
+
+Point the RFID app **Upload** button at:
+
+```
+POST http://<dashboard-host>:3000/api/posts
+Content-Type: application/json
+```
+
+Body: JSON array of objects with `id`, `name`, `description`, `location` (see `rfid-sample.json`).
+
+```bash
+# Example (from project root)
+curl -X POST http://localhost:3000/api/posts \
+  -H "Content-Type: application/json" \
+  -d @rfid-sample.json
+```
+
+Each upload replaces RFID assets for the locations present in the payload. Assets appear in the Assets table with **Distance** `-`, **Tamper** `-`, **Source** `RFID`. The Location Map shows RFID room labels in a bottom strip (e.g. `Room 103 [RFID] x 13`) without covering live/demo markers.
 
 ### macOS / Linux
 

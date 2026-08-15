@@ -72,6 +72,11 @@ let mqttBrokerInfo = {
   url: 'mqtt://localhost:1883',
   topics: ['/gw/#', 'gw/#'],
 };
+
+/** @type {Map<string, { id: string, name: string, description: string, location: string, lastSeen: string }>} */
+const rfidAssets = new Map();
+let lastRfidUpload = null;
+
 const clients = new Set();
 
 export function setMqttBrokerInfo(info) {
@@ -185,6 +190,80 @@ export function processReading(reading, { deferMotion = false } = {}) {
   }
 }
 
+/**
+ * Ingest RFID asset list from POST /api/posts.
+ * Replaces RFID assets for every location present in the payload;
+ * assets at other locations are kept.
+ * @param {unknown} body
+ * @returns {{ accepted: number, locations: Record<string, number> }}
+ */
+export function processRfidPosts(body) {
+  const items = normalizeRfidPayload(body);
+  if (!items.length) {
+    return { accepted: 0, locations: {} };
+  }
+
+  const now = new Date().toISOString();
+  const locationsInPayload = new Set();
+  const locationCounts = {};
+
+  for (const item of items) {
+    const location = String(item.location ?? '').trim() || 'Unknown';
+    locationsInPayload.add(location);
+  }
+
+  // Drop previous RFID assets for locations being re-uploaded
+  for (const [id, asset] of rfidAssets) {
+    if (locationsInPayload.has(asset.location)) {
+      rfidAssets.delete(id);
+    }
+  }
+
+  for (const item of items) {
+    const id = String(item.id ?? '').trim();
+    if (!id) continue;
+
+    const location = String(item.location ?? '').trim() || 'Unknown';
+    const name = String(item.name ?? id).trim() || id;
+    const description = String(item.description ?? '').trim();
+
+    rfidAssets.set(id, {
+      id,
+      name,
+      description,
+      location,
+      lastSeen: now,
+    });
+
+    locationCounts[location] = (locationCounts[location] || 0) + 1;
+  }
+
+  lastRfidUpload = {
+    at: now,
+    accepted: items.filter((i) => String(i.id ?? '').trim()).length,
+    locations: locationCounts,
+  };
+
+  broadcast({ type: 'update', data: getDashboardState() });
+
+  return {
+    accepted: lastRfidUpload.accepted,
+    locations: locationCounts,
+  };
+}
+
+function normalizeRfidPayload(body) {
+  if (Array.isArray(body)) return body;
+  if (body && typeof body === 'object') {
+    if (Array.isArray(body.assets)) return body.assets;
+    if (Array.isArray(body.data)) return body.data;
+    if (Array.isArray(body.posts)) return body.posts;
+    // Single asset object
+    if (body.id != null) return [body];
+  }
+  return [];
+}
+
 export function processMqttMessage(topic, payload) {
   lastMqttMessage = { topic, timestamp: new Date().toISOString() };
 
@@ -280,7 +359,43 @@ function buildLiveAssets() {
     gateway: sensorState.gateway.location,
     lastSeen: beacon.lastSeen,
     live: true,
+    source: 'MQTT',
     category: 'Live Asset',
+  }));
+}
+
+function buildRfidAssets() {
+  return Array.from(rfidAssets.values()).map((item) => ({
+    id: item.id,
+    asset: item.name,
+    description: item.description,
+    location: item.location,
+    icon: 'asset',
+    mac: item.id,
+    rssi: null,
+    tamper: null,
+    distance: '-',
+    distanceMin: null,
+    distanceMax: null,
+    distanceEstimate: null,
+    gateway: null,
+    lastSeen: item.lastSeen,
+    live: false,
+    source: 'RFID',
+    category: item.description || 'RFID Asset',
+  }));
+}
+
+/** Aggregate RFID asset counts per location for the Location Map. */
+function buildRfidLocations() {
+  const counts = {};
+  for (const asset of rfidAssets.values()) {
+    counts[asset.location] = (counts[asset.location] || 0) + 1;
+  }
+  return Object.entries(counts).map(([location, count]) => ({
+    location,
+    count,
+    label: `[RFID] x ${count}`,
   }));
 }
 
@@ -298,17 +413,22 @@ export function getDashboardState() {
   };
 
   const liveAssets = buildLiveAssets();
+  const rfid = buildRfidAssets();
   const demo = demoAssets.assets.map(({ temperature, humidity, motion: _m, ...a }) => ({
     ...a,
     tamper: a.tamper,
+    source: 'Demo',
   }));
 
   return {
     room,
-    assets: [...liveAssets, ...demo],
+    assets: [...liveAssets, ...rfid, ...demo],
+    rfidLocations: buildRfidLocations(),
     liveCount: liveAssets.length,
+    rfidCount: rfid.length,
     demoCount: demo.length,
     mqtt: getMqttStatus(),
+    rfid: lastRfidUpload,
     updatedAt: new Date().toISOString(),
   };
 }

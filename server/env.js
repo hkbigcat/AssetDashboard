@@ -12,6 +12,9 @@ function buildMqttUrl() {
 
 export const config = {
   port: Number(process.env.PORT) || 3001,
+  /** RFID reader upload API — listen on all interfaces */
+  rfidPort: Number(process.env.RFID_PORT) || 3000,
+  rfidHost: process.env.RFID_HOST || '0.0.0.0',
   mqtt: {
     url: buildMqttUrl(),
     broker: process.env.MQTT_BROKER || 'localhost',

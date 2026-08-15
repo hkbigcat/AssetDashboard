@@ -22,6 +22,7 @@ import {
   getMqttStatus,
   getPirDebug,
   processMqttMessage,
+  processRfidPosts,
   removeClient,
   setMqttBrokerInfo,
   setMqttConnected,
@@ -29,7 +30,13 @@ import {
 } from './state.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const { port: PORT, mqtt: mqttConfig, loadSampleData: shouldLoadSampleData } = config;
+const {
+  port: PORT,
+  rfidPort: RFID_PORT,
+  rfidHost: RFID_HOST,
+  mqtt: mqttConfig,
+  loadSampleData: shouldLoadSampleData,
+} = config;
 
 setMqttBrokerInfo({
   broker: mqttConfig.broker,
@@ -52,8 +59,14 @@ app.get('/', (_req, res) => {
       health: '/api/health',
       state: '/api/state',
       mqtt: '/api/mqtt',
+      rfidPosts: 'POST /api/posts',
       pirDebug: '/api/debug/pir',
       websocket: '/ws',
+    },
+    rfid: {
+      port: RFID_PORT,
+      host: RFID_HOST,
+      path: '/api/posts',
     },
     note: 'This is the backend API. The web dashboard UI is hosted separately (e.g. on Vercel).',
   });
@@ -73,6 +86,29 @@ app.get('/api/mqtt', (_req, res) => {
 
 app.get('/api/debug/pir', (_req, res) => {
   res.json(getPirDebug());
+});
+
+/**
+ * RFID reader upload — expects a JSON array of
+ * { id, name, description, location } (extra fields ignored).
+ * Available on the main API port and on the dedicated RFID port (default 3000).
+ */
+app.post('/api/posts', (req, res) => {
+  try {
+    const result = processRfidPosts(req.body);
+    console.log(
+      `RFID upload: ${result.accepted} asset(s) — locations: ${JSON.stringify(result.locations)}`
+    );
+    res.status(200).json({
+      ok: true,
+      accepted: result.accepted,
+      locations: result.locations,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('RFID /api/posts error:', err.message);
+    res.status(400).json({ ok: false, error: err.message || 'Invalid payload' });
+  }
 });
 
 const server = createServer(app);
@@ -138,6 +174,19 @@ loadSampleData();
 
 setInterval(tickState, 5000);
 
-server.listen(PORT, () => {
-  console.log(`Assets Dashboard API running at http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Assets Dashboard API running at http://0.0.0.0:${PORT}`);
 });
+
+// Dedicated RFID listener (all interfaces) so the handheld reader can POST to :3000
+if (RFID_PORT !== PORT) {
+  const rfidServer = createServer(app);
+  rfidServer.listen(RFID_PORT, RFID_HOST, () => {
+    console.log(
+      `RFID upload API listening at http://${RFID_HOST}:${RFID_PORT}/api/posts (POST)`
+    );
+  });
+  rfidServer.on('error', (err) => {
+    console.error(`RFID port ${RFID_PORT} error:`, err.message);
+  });
+}

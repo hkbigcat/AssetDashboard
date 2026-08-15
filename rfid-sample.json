@@ -1,0 +1,119 @@
+[
+  {
+    "id": "E2801191A50400788C77C6C5",
+    "name": "E2801191A50400788C77C6C5",
+    "description": "",
+    "location": "103",
+    "rssi": "85",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "E2801191A50400788C77C695",
+    "name": "Canon EOS R1 Camera",
+    "description": "Canon EOS R1 Camera",
+    "location": "103",
+    "rssi": "90",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "363620313031203131303736",
+    "name": "Ben Lee's ASUS Zenbook 14 Laptop",
+    "description": "Ben Lee's ASUS Zenbook 14 Laptop",
+    "location": "103",
+    "rssi": "86",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "E2801191A50400788C77C685",
+    "name": "E2801191A50400788C77C685",
+    "description": "",
+    "location": "103",
+    "rssi": "91",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "E2801191A50400788C77C6B5",
+    "name": "E2801191A50400788C77C6B5",
+    "description": "",
+    "location": "103",
+    "rssi": "84",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "E2806894000050335226ECA1",
+    "name": "Chloe's Dell Alienware 32 AW3225QF QD-OLED Monitor",
+    "description": "Chloe's Dell Alienware 32 AW3225QF QD-OLED Monitor",
+    "location": "103",
+    "rssi": "69",
+    "tid": "",
+    "count": 5
+  },
+  {
+    "id": "E28068940000401EE6A1913F",
+    "name": "Chloe's Lenovo ThinkBook 16 Gen 8  Laptop",
+    "description": "Chloe's Lenovo ThinkBook 16 Gen 8  Laptop",
+    "location": "103",
+    "rssi": "74",
+    "tid": "",
+    "count": 8
+  },
+  {
+    "id": "E2801191A50400788C77C6A5",
+    "name": "E2801191A50400788C77C6A5",
+    "description": "",
+    "location": "103",
+    "rssi": "69",
+    "tid": "",
+    "count": 5
+  },
+  {
+    "id": "E2806894000050335226F4A1",
+    "name": "Synology DiskStation DS225+",
+    "description": "Synology DiskStation DS225+",
+    "location": "103",
+    "rssi": "69",
+    "tid": "",
+    "count": 2
+  },
+  {
+    "id": "E2806894000040335226FCA1",
+    "name": "HP MFP M183FW Laserjet",
+    "description": "HP MFP M183FW Laserjet",
+    "location": "103",
+    "rssi": "70",
+    "tid": "",
+    "count": 2
+  },
+  {
+    "id": "E2806894000040335226F0A1",
+    "name": "E2806894000040335226F0A1",
+    "description": "",
+    "location": "103",
+    "rssi": "77",
+    "tid": "",
+    "count": 1
+  },
+  {
+    "id": "E2806894000040335226E8A1",
+    "name": "SONY ZV-E10 II Camera",
+    "description": "SONY ZV-E10 II Camera",
+    "location": "103",
+    "rssi": "75",
+    "tid": "",
+    "count": 5
+  },
+  {
+    "id": "E2806894000050335226E0A1",
+    "name": "E2806894000050335226E0A1",
+    "description": "",
+    "location": "103",
+    "rssi": "66",
+    "tid": "",
+    "count": 1
+  }
+]

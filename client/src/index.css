@@ -12,6 +12,7 @@
   --danger: #f87171;
   --live: #22d3ee;
   --demo: #a78bfa;
+  --rfid: #f59e0b;
   --radius: 12px;
   --font: 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
@@ -365,6 +366,16 @@ body {
   background: transparent;
 }
 
+/* Reserve lower strip for RFID room labels so they never cover map markers */
+.floor-map.has-rfid .other-zones {
+  bottom: 14%;
+  height: 16%;
+}
+
+.floor-map.has-rfid .east-wing {
+  height: 48%;
+}
+
 .zone-label {
   position: absolute;
   top: 6px;
@@ -494,7 +505,45 @@ body {
 }
 
 .legend-item.live { color: var(--live); }
+.legend-item.rfid { color: var(--rfid); }
 .legend-item.demo { color: var(--demo); }
+
+.rfid-locations-strip {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(12, 15, 20, 0.78);
+  backdrop-filter: blur(4px);
+  max-height: 22%;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.rfid-location-box {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 5px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--rfid);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: none;
+}
 
 .asset-icon {
   display: inline-flex;
@@ -623,6 +672,11 @@ body {
   color: var(--danger);
 }
 
+.tamper-badge.na {
+  background: rgba(139, 156, 179, 0.12);
+  color: var(--text-muted);
+}
+
 .live-badge {
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
@@ -633,6 +687,11 @@ body {
 .live-badge.mqtt {
   background: rgba(34, 211, 238, 0.15);
   color: var(--live);
+}
+
+.live-badge.rfid {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--rfid);
 }
 
 .live-badge.demo {

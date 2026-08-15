@@ -1,6 +1,6 @@
 import AssetIcon from './AssetIcon';
 
-function getPosition(asset, index, total) {
+function getPosition(asset, index, total, { reserveBottom = false } = {}) {
   if (asset.live && asset.distanceEstimate != null) {
     const pct = Math.min(85, Math.max(15, 15 + asset.distanceEstimate * 12));
     const angle = (index / total) * Math.PI * 2;
@@ -10,21 +10,41 @@ function getPosition(asset, index, total) {
     };
   }
 
-  const demoPositions = {
-    'demo-001': { left: '72%', top: '28%' },
-    'demo-002': { left: '18%', top: '75%' },
-    'demo-003': { left: '55%', top: '18%' },
-    'demo-004': { left: '30%', top: '45%' },
-    'demo-005': { left: '80%', top: '68%' },
-    'demo-006': { left: '42%', top: '82%' },
-  };
+  // Keep demo markers above the RFID strip when it is visible
+  const demoPositions = reserveBottom
+    ? {
+        'demo-001': { left: '72%', top: '26%' },
+        'demo-002': { left: '18%', top: '58%' },
+        'demo-003': { left: '55%', top: '16%' },
+        'demo-004': { left: '30%', top: '40%' },
+        'demo-005': { left: '80%', top: '52%' },
+        'demo-006': { left: '42%', top: '62%' },
+      }
+    : {
+        'demo-001': { left: '72%', top: '28%' },
+        'demo-002': { left: '18%', top: '75%' },
+        'demo-003': { left: '55%', top: '18%' },
+        'demo-004': { left: '30%', top: '45%' },
+        'demo-005': { left: '80%', top: '68%' },
+        'demo-006': { left: '42%', top: '82%' },
+      };
 
   return demoPositions[asset.id] || { left: '50%', top: '50%' };
 }
 
-export default function FloorMap({ assets, room }) {
+function formatRfidRoomLabel(loc) {
+  const room = String(loc.location).match(/^\d+$/)
+    ? `Room ${loc.location}`
+    : loc.location;
+  return `${room} [RFID] x ${loc.count}`;
+}
+
+export default function FloorMap({ assets, room, rfidLocations }) {
   const liveAssets = assets?.filter((a) => a.live) || [];
+  const demoAssets = assets?.filter((a) => !a.live && a.source !== 'RFID') || [];
+  const rfidRooms = rfidLocations || [];
   const gatewayLocation = room?.gateway?.location || 'East Wing - Room 101';
+  const hasRfid = rfidRooms.length > 0;
 
   return (
     <section className="panel map-panel">
@@ -32,11 +52,12 @@ export default function FloorMap({ assets, room }) {
         <h2>Location Map</h2>
         <span className="map-legend">
           <span className="legend-item live">● Live (MQTT)</span>
+          <span className="legend-item rfid">● RFID</span>
           <span className="legend-item demo">○ Demo</span>
         </span>
       </div>
 
-      <div className="floor-map">
+      <div className={`floor-map${hasRfid ? ' has-rfid' : ''}`}>
         <div className="map-zone east-wing">
           <span className="zone-label">East Wing</span>
           <div className="room-box room-101">
@@ -78,21 +99,36 @@ export default function FloorMap({ assets, room }) {
           <div className="mini-room warehouse">Warehouse C</div>
         </div>
 
-        {assets
-          ?.filter((a) => !a.live)
-          .map((asset) => {
-            const pos = getPosition(asset, 0, 1);
-            return (
-              <div
-                key={asset.id}
-                className={`asset-marker demo ${asset.tamper ? 'tampered' : ''}`}
-                style={pos}
-                title={`${asset.asset} — ${asset.location}`}
-              >
-                <AssetIcon type={asset.icon} />
-              </div>
-            );
-          })}
+        {demoAssets.map((asset) => {
+          const pos = getPosition(asset, 0, 1, { reserveBottom: hasRfid });
+          return (
+            <div
+              key={asset.id}
+              className={`asset-marker demo ${asset.tamper ? 'tampered' : ''}`}
+              style={pos}
+              title={`${asset.asset} — ${asset.location}`}
+            >
+              <AssetIcon type={asset.icon} />
+            </div>
+          );
+        })}
+
+        {hasRfid && (
+          <div className="rfid-locations-strip" aria-label="RFID locations">
+            {rfidRooms.map((loc) => {
+              const label = formatRfidRoomLabel(loc);
+              return (
+                <div
+                  key={`rfid-loc-${loc.location}`}
+                  className="rfid-location-box"
+                  title={`${label}: ${loc.count} RFID asset(s)`}
+                >
+                  {label}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

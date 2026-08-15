@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import AssetIcon from './AssetIcon';
 
-function TamperBadge({ tamper }) {
+function TamperBadge({ tamper, source }) {
+  if (source === 'RFID' || tamper == null) {
+    return <span className="tamper-badge na">-</span>;
+  }
   return (
     <span className={`tamper-badge ${tamper ? 'alert' : 'ok'}`}>
       {tamper ? 'Tampered' : 'Normal'}
@@ -9,12 +12,14 @@ function TamperBadge({ tamper }) {
   );
 }
 
-function LiveBadge({ live }) {
-  return (
-    <span className={`live-badge ${live ? 'mqtt' : 'demo'}`}>
-      {live ? 'MQTT Live' : 'Demo'}
-    </span>
-  );
+function SourceBadge({ source, live }) {
+  const resolved = source || (live ? 'MQTT' : 'Demo');
+  const className =
+    resolved === 'RFID' ? 'rfid' : resolved === 'MQTT' || live ? 'mqtt' : 'demo';
+  const label =
+    resolved === 'RFID' ? 'RFID' : resolved === 'MQTT' || live ? 'MQTT Live' : 'Demo';
+
+  return <span className={`live-badge ${className}`}>{label}</span>;
 }
 
 export default function AssetList({ assets }) {
@@ -23,10 +28,15 @@ export default function AssetList({ assets }) {
 
   if (!assets) return null;
 
+  const rfidCount = assets.filter((a) => a.source === 'RFID').length;
+  const liveCount = assets.filter((a) => a.live || a.source === 'MQTT').length;
+  const demoCount = assets.filter((a) => a.source === 'Demo' || (!a.live && a.source !== 'RFID')).length;
+
   let filtered = [...assets];
-  if (filter === 'live') filtered = filtered.filter((a) => a.live);
-  if (filter === 'demo') filtered = filtered.filter((a) => !a.live);
-  if (filter === 'tamper') filtered = filtered.filter((a) => a.tamper);
+  if (filter === 'live') filtered = filtered.filter((a) => a.live || a.source === 'MQTT');
+  if (filter === 'demo') filtered = filtered.filter((a) => a.source === 'Demo' || (!a.live && a.source !== 'RFID' && a.source !== 'MQTT'));
+  if (filter === 'rfid') filtered = filtered.filter((a) => a.source === 'RFID');
+  if (filter === 'tamper') filtered = filtered.filter((a) => a.tamper === true);
 
   filtered.sort((a, b) => {
     if (sortBy === 'distance') {
@@ -34,7 +44,10 @@ export default function AssetList({ assets }) {
       const db = b.distanceEstimate ?? b.distanceMin ?? 999;
       return da - db;
     }
-    if (sortBy === 'location') return a.location.localeCompare(b.location);
+    if (sortBy === 'location') return String(a.location).localeCompare(String(b.location));
+    if (sortBy === 'source') {
+      return String(a.source || '').localeCompare(String(b.source || ''));
+    }
     return a.asset.localeCompare(b.asset);
   });
 
@@ -45,14 +58,16 @@ export default function AssetList({ assets }) {
         <div className="asset-controls">
           <select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter assets">
             <option value="all">All ({assets.length})</option>
-            <option value="live">Live MQTT</option>
-            <option value="demo">Demo only</option>
+            <option value="live">Live MQTT ({liveCount})</option>
+            <option value="rfid">RFID ({rfidCount})</option>
+            <option value="demo">Demo only ({demoCount})</option>
             <option value="tamper">Tampered</option>
           </select>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort assets">
             <option value="name">Sort by name</option>
             <option value="distance">Sort by distance</option>
             <option value="location">Sort by location</option>
+            <option value="source">Sort by source</option>
           </select>
         </div>
       </div>
@@ -87,10 +102,10 @@ export default function AssetList({ assets }) {
                   )}
                 </td>
                 <td>
-                  <TamperBadge tamper={asset.tamper} />
+                  <TamperBadge tamper={asset.tamper} source={asset.source} />
                 </td>
                 <td>
-                  <LiveBadge live={asset.live} />
+                  <SourceBadge source={asset.source} live={asset.live} />
                 </td>
               </tr>
             ))}
