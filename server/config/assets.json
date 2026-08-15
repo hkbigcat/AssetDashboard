@@ -23,6 +23,20 @@
       "asset": "Canon EOS R5 Mark II",
       "location": "East Wing - Room 101",
       "icon": "camera"
+    },
+    {
+      "sensor": "Beacon",
+      "mac_address": "c30000695d88",
+      "asset": "Cargo Bike",
+      "location": "East Wing - Room 101",
+      "icon": "asset"
+    },
+    {
+      "sensor": "Door",
+      "mac_address": "c300008a3aaf",
+      "asset": "Entrance A",
+      "location": "East Wing - Room 101",
+      "icon": "door"
     }
   ]
 }

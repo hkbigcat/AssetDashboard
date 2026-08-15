@@ -19,6 +19,7 @@ const demoAssets = JSON.parse(
 
 const gateway = assetsConfig.assets.find((a) => a.sensor === 'Gateway');
 const pirSensor = assetsConfig.assets.find((a) => a.sensor === 'PIR');
+const doorSensors = assetsConfig.assets.filter((a) => a.sensor === 'Door');
 const beacons = assetsConfig.assets.filter((a) => a.sensor === 'Beacon');
 
 const MOTION_HOLD_MS = 120_000;
@@ -42,12 +43,31 @@ const sensorState = {
     rssi: null,
     lastSeen: null,
   },
+  /** @type {Record<string, object>} */
+  doors: {},
   beacons: {},
 };
 
+for (const door of doorSensors) {
+  const mac = door.mac_address.toLowerCase();
+  sensorState.doors[mac] = {
+    mac,
+    name: door.asset || door.location || 'Door',
+    location: door.location || door.asset || 'Door',
+    open: null,
+    contact: null,
+    tamper: false,
+    battery: null,
+    rssi: null,
+    lastSeen: null,
+    protocol: null,
+  };
+}
+
 for (const beacon of beacons) {
-  sensorState.beacons[beacon.mac_address] = {
-    mac: beacon.mac_address,
+  const mac = beacon.mac_address.toLowerCase();
+  sensorState.beacons[mac] = {
+    mac,
     asset: beacon.asset,
     location: beacon.location || gateway?.location,
     icon: beacon.icon || 'asset',
@@ -57,10 +77,14 @@ for (const beacon of beacons) {
     distance: null,
     distanceRange: null,
     txPower: -59,
+    frameType: null,
+    url: null,
     lastSeen: null,
     live: true,
   };
 }
+
+const RANGING_FRAME_TYPES = new Set(['ib', 'tp', 'eddystone-url', 'eddystone-uid']);
 
 let mqttConnected = false;
 let lastMqttMessage = null;
@@ -165,25 +189,42 @@ export function processReading(reading, { deferMotion = false } = {}) {
     return false;
   }
 
+  const door = sensorState.doors[mac];
+  if (door && parsed.type === 'door') {
+    door.rssi = rssi;
+    door.lastSeen = timestamp;
+    door.protocol = parsed.protocol ?? door.protocol;
+    if (parsed.open != null) door.open = parsed.open;
+    if (parsed.contact != null) door.contact = parsed.contact;
+    if (parsed.tamper != null) door.tamper = parsed.tamper;
+    if (parsed.battery != null) door.battery = parsed.battery;
+    return false;
+  }
+
   const beacon = sensorState.beacons[mac];
   if (!beacon) return;
 
   beacon.rssi = rssi;
   beacon.lastSeen = timestamp;
+  beacon.frameType = parsed.type;
 
   if (parsed.type === 'tp') {
     beacon.tamper = parsed.tamper ?? parsed.demolished ?? false;
     beacon.battery = parsed.battery ?? beacon.battery;
   }
 
-  if (parsed.type === 'ib') {
-    if (parsed.rssi_at_xm != null) beacon.txPower = parsed.rssi_at_xm;
-    const distance = rssiToDistance(rssi, beacon.txPower);
-    beacon.distance = distance;
-    beacon.distanceRange = formatDistanceRange(distance);
+  if (parsed.type === 'eddystone-url' && parsed.url) {
+    beacon.url = parsed.url;
   }
 
-  if (beacon.rssi != null && (parsed.type === 'tp' || parsed.type === 'ib')) {
+  // iBeacon measured power, Eddystone calibrated TX @ 0 m, or prior calibration
+  if (parsed.rssi_at_xm != null) {
+    beacon.txPower = parsed.rssi_at_xm;
+  } else if (parsed.txPower != null) {
+    beacon.txPower = parsed.txPower;
+  }
+
+  if (beacon.rssi != null && RANGING_FRAME_TYPES.has(parsed.type)) {
     const distance = rssiToDistance(beacon.rssi, beacon.txPower);
     beacon.distance = distance;
     beacon.distanceRange = formatDistanceRange(distance);
@@ -277,6 +318,9 @@ export function processMqttMessage(topic, payload) {
         parsed = { type: 'json-raw', ...parseJsonRawPayload(json) };
       } else if (json.adv) {
         parsed = { type: 'json-parsed', ...parseJsonParsedPayload(json) };
+      } else if (json.mac && json.raw) {
+        // Single JSON-RAW advertisement object (e.g. Eddystone location beacon)
+        parsed = { type: 'json-raw', ...parseJsonRawPayload(json) };
       }
     } catch {
       return;
@@ -339,7 +383,112 @@ export function tickState() {
 
 export function setMqttConnected(connected) {
   mqttConnected = connected;
+  if (!connected) {
+    sensorState.gateway.connected = false;
+  }
   broadcast({ type: 'mqtt-status', data: getMqttStatus() });
+}
+
+const DEFAULT_SENSOR_LOCATION = 'East Wing - Room 101';
+
+function formatBatteryLevel(battery) {
+  if (battery == null || Number.isNaN(Number(battery))) return null;
+  const n = Number(battery);
+  // Minew frames usually report 0–100; clamp for display safety
+  if (n < 0) return null;
+  return Math.min(100, Math.round(n));
+}
+
+function buildAdminInventory() {
+  const location = sensorState.gateway.location || DEFAULT_SENSOR_LOCATION;
+
+  const gateways = [
+    {
+      mac: (sensorState.gateway.mac || gateway?.mac_address || '—').toLowerCase(),
+      location,
+      status: sensorState.gateway.connected ? 'Online' : 'Offline',
+      lastSeen: sensorState.gateway.lastSeen,
+    },
+  ];
+
+  const sensors = [];
+
+  if (sensorState.pir.mac) {
+    sensors.push({
+      mac: sensorState.pir.mac,
+      location: sensorState.pir.location || location,
+      type: 'Motion',
+      battery: formatBatteryLevel(sensorState.pir.battery),
+      lastSeen: sensorState.pir.lastSeen,
+      name: 'PIR Motion Sensor',
+    });
+  }
+
+  for (const beacon of Object.values(sensorState.beacons)) {
+    sensors.push({
+      mac: beacon.mac,
+      location: beacon.location || location,
+      type: 'Location Beacon',
+      battery: formatBatteryLevel(beacon.battery),
+      lastSeen: beacon.lastSeen,
+      name: beacon.asset,
+    });
+  }
+
+  for (const door of Object.values(sensorState.doors)) {
+    sensors.push({
+      mac: door.mac,
+      location: door.location || location,
+      type: 'Door',
+      battery: formatBatteryLevel(door.battery),
+      lastSeen: door.lastSeen,
+      name: door.name,
+    });
+  }
+
+  sensors.sort((a, b) => {
+    const typeOrder = { Motion: 0, Door: 1, 'Location Beacon': 2 };
+    const ta = typeOrder[a.type] ?? 9;
+    const tb = typeOrder[b.type] ?? 9;
+    if (ta !== tb) return ta - tb;
+    return a.mac.localeCompare(b.mac);
+  });
+
+  return { gateways, sensors };
+}
+
+function liveCategory(beacon) {
+  if (beacon.frameType === 'eddystone-url' || beacon.frameType === 'eddystone-uid') {
+    return 'Location Beacon (Eddystone)';
+  }
+  return 'Live Asset';
+}
+
+function buildDoorStatuses() {
+  return Object.values(sensorState.doors).map((door) => {
+    let statusLabel = 'Unknown';
+    if (door.open === true) statusLabel = 'Open';
+    else if (door.open === false) statusLabel = 'Closed';
+
+    return {
+      id: door.mac,
+      mac: door.mac,
+      name: door.name,
+      location: door.location,
+      open: door.open,
+      contact: door.contact,
+      tamper: !!door.tamper,
+      battery: door.battery,
+      rssi: door.rssi,
+      lastSeen: door.lastSeen,
+      protocol: door.protocol,
+      statusLabel,
+      headline:
+        door.open == null
+          ? `${door.name} — waiting for data`
+          : `${door.name} is ${statusLabel}`,
+    };
+  });
 }
 
 function buildLiveAssets() {
@@ -360,7 +509,9 @@ function buildLiveAssets() {
     lastSeen: beacon.lastSeen,
     live: true,
     source: 'MQTT',
-    category: 'Live Asset',
+    category: liveCategory(beacon),
+    frameType: beacon.frameType,
+    url: beacon.url,
   }));
 }
 
@@ -413,6 +564,7 @@ export function getDashboardState() {
   };
 
   const liveAssets = buildLiveAssets();
+  const doors = buildDoorStatuses();
   const rfid = buildRfidAssets();
   const demo = demoAssets.assets.map(({ temperature, humidity, motion: _m, ...a }) => ({
     ...a,
@@ -420,13 +572,17 @@ export function getDashboardState() {
     source: 'Demo',
   }));
 
+  const admin = buildAdminInventory();
+
   return {
     room,
+    doors,
     assets: [...liveAssets, ...rfid, ...demo],
     rfidLocations: buildRfidLocations(),
     liveCount: liveAssets.length,
     rfidCount: rfid.length,
     demoCount: demo.length,
+    admin,
     mqtt: getMqttStatus(),
     rfid: lastRfidUpload,
     updatedAt: new Date().toISOString(),

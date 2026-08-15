@@ -3,7 +3,7 @@ import AssetIcon from './AssetIcon';
 function getPosition(asset, index, total, { reserveBottom = false } = {}) {
   if (asset.live && asset.distanceEstimate != null) {
     const pct = Math.min(85, Math.max(15, 15 + asset.distanceEstimate * 12));
-    const angle = (index / total) * Math.PI * 2;
+    const angle = (index / Math.max(total, 1)) * Math.PI * 2;
     return {
       left: `${50 + Math.cos(angle) * pct * 0.35}%`,
       top: `${50 + Math.sin(angle) * pct * 0.3}%`,
@@ -39,8 +39,33 @@ function formatRfidRoomLabel(loc) {
   return `${room} [RFID] x ${loc.count}`;
 }
 
+function isRoom101Asset(asset) {
+  const loc = (asset.location || '').toLowerCase();
+  return loc.includes('room 101') || loc.includes('east wing');
+}
+
+function isWarehouseAsset(asset) {
+  return (asset.location || '').toLowerCase().includes('warehouse');
+}
+
+function LiveMarker({ asset, style }) {
+  return (
+    <div
+      className={`asset-marker live ${asset.tamper ? 'tampered' : ''}`}
+      style={style}
+      title={`${asset.asset} — ${asset.distance}${asset.url ? ` — ${asset.url}` : ''}`}
+    >
+      <AssetIcon type={asset.icon} />
+      <span className="marker-distance">{asset.distance}</span>
+    </div>
+  );
+}
+
 export default function FloorMap({ assets, room, rfidLocations }) {
   const liveAssets = assets?.filter((a) => a.live) || [];
+  const room101Live = liveAssets.filter(isRoom101Asset);
+  const warehouseLive = liveAssets.filter(isWarehouseAsset);
+  const otherLive = liveAssets.filter((a) => !isRoom101Asset(a) && !isWarehouseAsset(a));
   const demoAssets = assets?.filter((a) => !a.live && a.source !== 'RFID') || [];
   const rfidRooms = rfidLocations || [];
   const gatewayLocation = room?.gateway?.location || 'East Wing - Room 101';
@@ -67,20 +92,13 @@ export default function FloorMap({ assets, room, rfidLocations }) {
               <span>Gateway</span>
             </div>
 
-            {liveAssets.map((asset, i) => {
-              const pos = getPosition(asset, i, liveAssets.length);
-              return (
-                <div
-                  key={asset.id}
-                  className={`asset-marker live ${asset.tamper ? 'tampered' : ''}`}
-                  style={pos}
-                  title={`${asset.asset} — ${asset.distance}`}
-                >
-                  <AssetIcon type={asset.icon} />
-                  <span className="marker-distance">{asset.distance}</span>
-                </div>
-              );
-            })}
+            {room101Live.map((asset, i) => (
+              <LiveMarker
+                key={asset.id}
+                asset={asset}
+                style={getPosition(asset, i, room101Live.length)}
+              />
+            ))}
 
             {room?.motion && <div className="motion-pulse" />}
           </div>
@@ -96,8 +114,30 @@ export default function FloorMap({ assets, room, rfidLocations }) {
         <div className="map-zone other-zones">
           <div className="mini-room server">Server B1</div>
           <div className="mini-room store">Store 2/F</div>
-          <div className="mini-room warehouse">Warehouse C</div>
+          <div className={`mini-room warehouse${warehouseLive.length ? ' has-live' : ''}`}>
+            <span className="mini-room-label">Warehouse C</span>
+            {warehouseLive.map((asset, i) => {
+              const angle = (i / Math.max(warehouseLive.length, 1)) * Math.PI * 2;
+              const style = {
+                left: `${50 + Math.cos(angle) * 22}%`,
+                top: `${58 + Math.sin(angle) * 16}%`,
+              };
+              return <LiveMarker key={asset.id} asset={asset} style={style} />;
+            })}
+          </div>
         </div>
+
+        {/* Live assets at other locations — place near map center-bottom if any */}
+        {otherLive.map((asset, i) => (
+          <LiveMarker
+            key={asset.id}
+            asset={asset}
+            style={{
+              left: `${30 + (i % 4) * 12}%`,
+              top: `${48 + Math.floor(i / 4) * 10}%`,
+            }}
+          />
+        ))}
 
         {demoAssets.map((asset) => {
           const pos = getPosition(asset, 0, 1, { reserveBottom: hasRfid });
