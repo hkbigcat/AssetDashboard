@@ -1,3 +1,5 @@
+import { useTheme } from '../hooks/useTheme';
+
 function formatBattery(battery) {
   if (battery == null) return '—';
   return `${battery}%`;
@@ -22,9 +24,32 @@ function StatusBadge({ status }) {
 export default function AdminPage({ admin }) {
   const gateways = admin?.gateways || [];
   const sensors = admin?.sensors || [];
+  const { theme, setTheme, themes } = useTheme();
 
   return (
     <div className="admin-page">
+      <section className="panel admin-panel">
+        <div className="panel-header">
+          <h2>Appearance</h2>
+        </div>
+        <div className="admin-settings">
+          <label className="admin-field">
+            Theme
+            <select
+              value={theme}
+              onChange={(event) => setTheme(event.target.value)}
+              aria-label="Theme"
+            >
+              {themes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
+
       <section className="panel admin-panel">
         <div className="panel-header">
           <h2>Gateway</h2>

@@ -1,4 +1,7 @@
-:root {
+/* Dark is the default. Add a theme with a [data-theme="id"] block and an entry in themes.js. */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #0c0f14;
   --surface: #141a22;
   --surface-2: #1a222d;
@@ -13,9 +16,39 @@
   --live: #22d3ee;
   --demo: #a78bfa;
   --rfid: #f59e0b;
+  --rfid-ink: #fcd34d;
+  --room-fill: rgba(20, 26, 34, 0.6);
+  --mini-room: rgba(20, 26, 34, 0.5);
+  --overlay: rgba(12, 15, 20, 0.78);
+  --strip-bg: rgba(12, 15, 20, 0.78);
+  --map-grid: rgba(42, 53, 68, 0.3);
   --radius: 12px;
   --font: 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #e8eef5;
+  --border: #d0d7e2;
+  --text: #1a2332;
+  --text-muted: #5b6b7c;
+  --accent: #1570c2;
+  --accent-dim: #0e4f8a;
+  --success: #0f7a4a;
+  --warning: #b45309;
+  --danger: #b42318;
+  --live: #0f7490;
+  --demo: #6d28d9;
+  --rfid: #c2410c;
+  --rfid-ink: #9a3412;
+  --room-fill: rgba(255, 255, 255, 0.78);
+  --mini-room: rgba(255, 255, 255, 0.7);
+  --overlay: #ffffff;
+  --strip-bg: #ffffff;
+  --map-grid: rgba(26, 35, 50, 0.12);
 }
 
 *,
@@ -138,7 +171,7 @@ body {
   appearance: none;
   border: 1px solid rgba(245, 158, 11, 0.55);
   background: rgba(245, 158, 11, 0.16);
-  color: #fcd34d;
+  color: var(--rfid-ink);
   font-family: var(--font);
   font-size: 0.8rem;
   font-weight: 700;
@@ -542,8 +575,8 @@ body {
   height: 420px;
   margin: 1rem 1.25rem 1.25rem;
   background:
-    linear-gradient(90deg, rgba(42, 53, 68, 0.3) 1px, transparent 1px),
-    linear-gradient(rgba(42, 53, 68, 0.3) 1px, transparent 1px);
+    linear-gradient(90deg, var(--map-grid) 1px, transparent 1px),
+    linear-gradient(var(--map-grid) 1px, transparent 1px);
   background-size: 24px 24px;
   background-color: var(--surface-2);
   border-radius: 8px;
@@ -610,7 +643,7 @@ body {
   inset: 24px 12px 12px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: rgba(20, 26, 34, 0.6);
+  background: var(--room-fill);
 }
 
 .room-label {
@@ -724,7 +757,7 @@ body {
   justify-content: center;
   font-size: 0.65rem;
   color: var(--text-muted);
-  background: rgba(20, 26, 34, 0.5);
+  background: var(--mini-room);
   overflow: visible;
 }
 
@@ -782,11 +815,15 @@ body {
   padding: 0.4rem 0.5rem;
   border-radius: 6px;
   border: 1px solid rgba(245, 158, 11, 0.25);
-  background: rgba(12, 15, 20, 0.78);
+  background: var(--strip-bg);
   backdrop-filter: blur(4px);
   max-height: 22%;
   overflow-y: auto;
   pointer-events: auto;
+}
+
+[data-theme='light'] .rfid-locations-strip {
+  background-color: #ffffff;
 }
 
 .rfid-location-box {
@@ -1085,6 +1122,34 @@ body {
 .admin-type-badge.door {
   background: rgba(245, 158, 11, 0.15);
   color: var(--rfid);
+}
+
+.admin-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.25rem 1.75rem;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 220px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.admin-field select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 @media (max-width: 1100px) {
