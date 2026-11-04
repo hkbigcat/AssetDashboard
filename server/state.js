@@ -189,15 +189,25 @@ export function processReading(reading, { deferMotion = false } = {}) {
     return false;
   }
 
-  const door = sensorState.doors[mac];
-  if (door && parsed.type === 'door') {
-    door.rssi = rssi;
+  // Door status (CA 03) or device info / battery (CA 00) for registered door sensors
+  const door =
+    sensorState.doors[mac] ||
+    (parsed.mac && sensorState.doors[String(parsed.mac).toLowerCase()]) ||
+    null;
+  if (
+    door &&
+    (parsed.type === 'door' || parsed.type === 'minew-device-info')
+  ) {
+    door.rssi = rssi ?? door.rssi;
     door.lastSeen = timestamp;
     door.protocol = parsed.protocol ?? door.protocol;
-    if (parsed.open != null) door.open = parsed.open;
-    if (parsed.contact != null) door.contact = parsed.contact;
-    if (parsed.tamper != null) door.tamper = parsed.tamper;
+    if (parsed.type === 'door') {
+      if (parsed.open != null) door.open = parsed.open;
+      if (parsed.contact != null) door.contact = parsed.contact;
+      if (parsed.tamper != null) door.tamper = parsed.tamper;
+    }
     if (parsed.battery != null) door.battery = parsed.battery;
+    if (parsed.firmwareVersion) door.firmwareVersion = parsed.firmwareVersion;
     return false;
   }
 

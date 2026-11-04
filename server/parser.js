@@ -174,16 +174,63 @@ export function parseEddystoneFrame(serviceDataHex) {
   return null;
 }
 
+/** Convert 6-byte little-endian MAC from a Minew payload into lowercase hex. */
+function macBytesLeToHex(bytes) {
+  return [...bytes]
+    .reverse()
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function hexToBytes(hex) {
+  const bytes = [];
+  for (let i = 0; i + 2 <= hex.length; i += 2) {
+    bytes.push(parseInt(hex.slice(i, i + 2), 16));
+  }
+  return bytes;
+}
+
 /**
  * Minew manufacturer-specific data (company ID 0x0639).
- * Supports Connect V3 combination frames (door contact) and classic S4 door frames.
+ * Supports Connect V3 info (CA 00), combination (CA 03), and classic S4 door frames.
  * Manufacturer payload is the bytes after company ID (little-endian 39 06).
+ *
+ * S4 Smart Door Sensor Data Frame V004:
+ * - Info frame CA/00 — battery % at byte offset 8 of mfg payload (ADV offset 15)
+ * - Combination CA/03 — door status block 0x1F (no battery)
  */
 export function parseMinewManufacturerData(mfgHex) {
   if (!mfgHex || mfgHex.length < 4) return null;
   const hex = mfgHex.toLowerCase();
   const frameType = hex.slice(0, 2);
   const frameVersion = parseInt(hex.slice(2, 4), 16);
+  const bytes = hexToBytes(hex);
+
+  // Connect V3 — info / device-static frame (battery lives here per V004)
+  // Layout after company ID: CA | 00 | MAC[6 LE] | Battery% | FW[2 BE] | ...
+  if (frameType === 'ca' && frameVersion === 0x00) {
+    if (bytes.length < 9) return null;
+
+    const embeddedMac = macBytesLeToHex(bytes.slice(2, 8));
+    const battery = bytes[8];
+    let firmwareVersion = null;
+    if (bytes.length >= 11) {
+      const fw = (bytes[9] << 8) | bytes[10];
+      // V004: 16-bit BE — 3b major, 6b minor, 7b build
+      const major = (fw >> 13) & 0x07;
+      const minor = (fw >> 7) & 0x3f;
+      const build = fw & 0x7f;
+      firmwareVersion = `${major}.${minor}.${build}`;
+    }
+
+    return {
+      type: 'minew-device-info',
+      protocol: 'minew-connect-v3-info',
+      mac: embeddedMac,
+      battery: Number.isFinite(battery) ? battery : null,
+      firmwareVersion,
+    };
+  }
 
   // Connect V3 — combination frame with sensor blocks
   if (frameType === 'ca' && frameVersion === 0x03) {
@@ -200,24 +247,21 @@ export function parseMinewManufacturerData(mfgHex) {
 
     // Walk combination blocks until the trailing 4-byte salt/signature
     let offset = 2; // byte index into binary buffer
-    const bytes = [];
-    for (let i = 0; i + 2 <= hex.length; i += 2) {
-      bytes.push(parseInt(hex.slice(i, i + 2), 16));
-    }
     const POST_LEN = 4;
 
     while (offset < bytes.length - POST_LEN) {
       const blockId = bytes[offset];
       if (blockId === 0x1f && offset + 5 <= bytes.length) {
-        // Door contact block: status, contactCycle, (reserved), tamperCycle
+        // V004 door sensor block: status, openCount, closeCount, tamperCount
         const status = bytes[offset + 1];
-        // bit7: magnet/contact absent when set → door open
-        // bit6: anti-disassembly / tamper when set
-        const contact = (status & 0x80) === 0x00;
-        result.contact = contact;
-        result.open = !contact;
-        result.tamper = (status & 0x40) === 0x40;
-        result.contactCycle = bytes[offset + 2];
+        // bit7 (MSB bit0 in V004): open=1 / close=0
+        // bit6 (MSB bit1 in V004): anti-disassembly release=1 / press=0
+        const open = (status & 0x80) !== 0;
+        result.open = open;
+        result.contact = !open;
+        result.tamper = (status & 0x40) !== 0;
+        result.contactCycle = bytes[offset + 2]; // open serial
+        result.closeCycle = bytes[offset + 3];
         result.tamperCycle = bytes[offset + 4];
         offset += 5;
         continue;
