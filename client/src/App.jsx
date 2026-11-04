@@ -4,7 +4,7 @@ import AssetList from './components/AssetList';
 import DoorPanel from './components/DoorPanel';
 import FloorMap from './components/FloorMap';
 import RoomPanel from './components/RoomPanel';
-import { useDashboard } from './hooks/useDashboard';
+import { getApiBase, useDashboard } from './hooks/useDashboard';
 
 function normalizePath(pathname) {
   const path = (pathname || '/').replace(/\/+$/, '') || '/';
@@ -33,7 +33,34 @@ function usePathname() {
 export default function App() {
   const { state, connected, error } = useDashboard();
   const [path, navigate] = usePathname();
+  const [rfidScan, setRfidScan] = useState({ status: 'idle', message: '' });
   const isAdmin = path === '/admin';
+
+  const readWestWingRfid = useCallback(async () => {
+    setRfidScan({ status: 'reading', message: 'Reading tags at West Wing Hall…' });
+    try {
+      const res = await fetch(`${getApiBase()}/api/rfid/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(25000),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || `Read failed (${res.status})`);
+      }
+      const count = data.accepted ?? 0;
+      setRfidScan({
+        status: 'ok',
+        message:
+          count === 0
+            ? 'West Wing Hall: no tags in range'
+            : `West Wing Hall: ${count} asset${count === 1 ? '' : 's'}`,
+      });
+    } catch (err) {
+      const message = err?.name === 'TimeoutError' ? 'RFID reader timed out' : err.message || 'Read failed';
+      setRfidScan({ status: 'error', message });
+    }
+  }, []);
 
   return (
     <div className="app">
@@ -77,6 +104,21 @@ export default function App() {
                 <span className="header-stat-label">Sensors</span>
               </div>
             </>
+          )}
+          {!isAdmin && (
+            <div className="rfid-read">
+              <button
+                type="button"
+                className="rfid-read-btn"
+                onClick={readWestWingRfid}
+                disabled={rfidScan.status === 'reading'}
+              >
+                {rfidScan.status === 'reading' ? 'Reading…' : 'Read West Wing RFID'}
+              </button>
+              {rfidScan.message && (
+                <span className={`rfid-read-status ${rfidScan.status}`}>{rfidScan.message}</span>
+              )}
+            </div>
           )}
           <nav className="header-nav" aria-label="Primary">
             <button

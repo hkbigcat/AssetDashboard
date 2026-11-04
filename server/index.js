@@ -16,6 +16,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer } from 'ws';
 import { config } from './env.js';
+import { readFixedReader } from './fixedRfid.js';
 import {
   addClient,
   getDashboardState,
@@ -24,6 +25,7 @@ import {
   processMqttMessage,
   processRfidPosts,
   removeClient,
+  replaceRfidAtLocation,
   setMqttBrokerInfo,
   setMqttConnected,
   tickState,
@@ -60,6 +62,7 @@ app.get('/', (_req, res) => {
       state: '/api/state',
       mqtt: '/api/mqtt',
       rfidPosts: 'POST /api/posts',
+      rfidRead: 'POST /api/rfid/read',
       pirDebug: '/api/debug/pir',
       websocket: '/ws',
     },
@@ -93,6 +96,43 @@ app.get('/api/debug/pir', (_req, res) => {
  * { id, name, description, location } (extra fields ignored).
  * Available on the main API port and on the dedicated RFID port (default 3000).
  */
+/**
+ * Fixed UHF reader in West Wing Hall.
+ * Calls the reader web API, maps EPC to the handheld asset catalog,
+ * and replaces RFID assets at that location.
+ */
+app.post('/api/rfid/read', async (_req, res) => {
+  try {
+    const { reader, assets } = await readFixedReader();
+    const location = config.fixedReader.location;
+    const result = replaceRfidAtLocation(location, assets);
+    console.log(
+      `Fixed RFID read: ${result.accepted} asset(s) at ${location} — reader ${reader.reader || ''}`
+    );
+    res.status(200).json({
+      ok: true,
+      location,
+      accepted: result.accepted,
+      reader: reader.reader || null,
+      antennas: reader.antennas || config.fixedReader.antennas,
+      durationMs: reader.durationMs || config.fixedReader.durationMs,
+      tags: assets.map((asset) => ({
+        epc: asset.id,
+        name: asset.name,
+        tid: asset.tid,
+        antenna: asset.antenna,
+        rssi: asset.rssi,
+        count: asset.count,
+      })),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    const status = err.status || 502;
+    console.error('Fixed RFID read error:', err.message);
+    res.status(status).json({ ok: false, error: err.message || 'RFID read failed' });
+  }
+});
+
 app.post('/api/posts', (req, res) => {
   try {
     const result = processRfidPosts(req.body);

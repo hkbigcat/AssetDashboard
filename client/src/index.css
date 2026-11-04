@@ -127,6 +127,50 @@ body {
   box-shadow: inset 0 0 0 1px rgba(59, 158, 255, 0.25);
 }
 
+.rfid-read {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.rfid-read-btn {
+  appearance: none;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rfid-read-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.28);
+}
+
+.rfid-read-btn:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.rfid-read-status {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  max-width: 16rem;
+  text-align: right;
+}
+
+.rfid-read-status.ok {
+  color: var(--rfid);
+}
+
+.rfid-read-status.error {
+  color: var(--danger);
+}
+
 .header-stat {
   text-align: center;
 }
@@ -575,6 +619,15 @@ body {
   right: 8px;
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+.hall-rfid-label {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--rfid);
 }
 
 .gateway-marker {

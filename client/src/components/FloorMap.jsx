@@ -108,6 +108,7 @@ export default function FloorMap({ assets, room, rfidLocations }) {
           <span className="zone-label">West Wing</span>
           <div className="room-box meeting-room">
             <span className="room-label">Meeting 5/F</span>
+            <span className="hall-rfid-label">Hall · RFID</span>
           </div>
         </div>
 

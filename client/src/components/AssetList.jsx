@@ -90,14 +90,26 @@ export default function AssetList({ assets }) {
                   <AssetIcon type={asset.icon} className="table-icon" />
                   <div>
                     <strong>{asset.asset}</strong>
-                    {asset.category && <span className="category">{asset.category}</span>}
+                    {asset.category && asset.category !== asset.asset && (
+                      <span className="category">{asset.category}</span>
+                    )}
                     {asset.mac && <span className="mac mono">{asset.mac}</span>}
+                    {asset.source === 'RFID' && asset.tid && (
+                      <span className="mac mono">TID {asset.tid}</span>
+                    )}
                   </div>
                 </td>
                 <td>{asset.location}</td>
                 <td className="mono">
                   {asset.distance}
-                  {asset.rssi != null && (
+                  {asset.source === 'RFID' && (asset.antenna != null || asset.rssi != null) && (
+                    <span className="rssi">
+                      {asset.antenna != null ? `ANT ${asset.antenna}` : ''}
+                      {asset.antenna != null && asset.rssi != null ? ' · ' : ''}
+                      {asset.rssi != null ? `RSSI ${asset.rssi}` : ''}
+                    </span>
+                  )}
+                  {asset.source !== 'RFID' && asset.rssi != null && (
                     <span className="rssi">{asset.rssi} dBm</span>
                   )}
                 </td>

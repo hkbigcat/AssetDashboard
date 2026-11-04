@@ -26,4 +26,16 @@ export const config = {
       .filter(Boolean),
   },
   loadSampleData: process.env.LOAD_SAMPLE_DATA === 'true',
+  /** Fixed UHF reader web API (RfidWeb on :5080). Antenna is in West Wing Hall. */
+  fixedReader: {
+    baseUrl: process.env.RFID_READER_URL || 'http://127.0.0.1:5080',
+    ip: process.env.RFID_READER_IP || '192.168.1.135',
+    port: Number(process.env.RFID_READER_PORT) || 8160,
+    antennas: (process.env.RFID_READER_ANTENNAS || '1')
+      .split(',')
+      .map((n) => Number(n.trim()))
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= 4),
+    durationMs: Number(process.env.RFID_READER_DURATION_MS) || 2000,
+    location: process.env.RFID_FIXED_LOCATION || 'West Wing Hall',
+  },
 };

@@ -97,7 +97,7 @@ let mqttBrokerInfo = {
   topics: ['/gw/#', 'gw/#'],
 };
 
-/** @type {Map<string, { id: string, name: string, description: string, location: string, lastSeen: string }>} */
+/** @type {Map<string, { id: string, name: string, description: string, location: string, lastSeen: string, rssi: number|null, tid: string, antenna: number|null, count: number|null }>} */
 const rfidAssets = new Map();
 let lastRfidUpload = null;
 
@@ -248,6 +248,42 @@ export function processReading(reading, { deferMotion = false } = {}) {
  * @param {unknown} body
  * @returns {{ accepted: number, locations: Record<string, number> }}
  */
+function optionalNumber(value) {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function storeRfidItem(item, now, locationCounts) {
+  const id = String(item.id ?? '').trim();
+  if (!id) return false;
+
+  const location = String(item.location ?? '').trim() || 'Unknown';
+  const name = String(item.name ?? id).trim() || id;
+  const description = String(item.description ?? '').trim();
+
+  rfidAssets.set(id, {
+    id,
+    name,
+    description,
+    location,
+    lastSeen: now,
+    rssi: optionalNumber(item.rssi),
+    tid: item.tid != null ? String(item.tid).trim() : '',
+    antenna: optionalNumber(item.antenna),
+    count: optionalNumber(item.count),
+  });
+
+  locationCounts[location] = (locationCounts[location] || 0) + 1;
+  return true;
+}
+
+function dropRfidAtLocations(locations) {
+  for (const [id, asset] of rfidAssets) {
+    if (locations.has(asset.location)) rfidAssets.delete(id);
+  }
+}
+
 export function processRfidPosts(body) {
   const items = normalizeRfidPayload(body);
   if (!items.length) {
@@ -264,43 +300,53 @@ export function processRfidPosts(body) {
   }
 
   // Drop previous RFID assets for locations being re-uploaded
-  for (const [id, asset] of rfidAssets) {
-    if (locationsInPayload.has(asset.location)) {
-      rfidAssets.delete(id);
-    }
-  }
+  dropRfidAtLocations(locationsInPayload);
 
+  let accepted = 0;
   for (const item of items) {
-    const id = String(item.id ?? '').trim();
-    if (!id) continue;
-
-    const location = String(item.location ?? '').trim() || 'Unknown';
-    const name = String(item.name ?? id).trim() || id;
-    const description = String(item.description ?? '').trim();
-
-    rfidAssets.set(id, {
-      id,
-      name,
-      description,
-      location,
-      lastSeen: now,
-    });
-
-    locationCounts[location] = (locationCounts[location] || 0) + 1;
+    if (storeRfidItem(item, now, locationCounts)) accepted++;
   }
 
   lastRfidUpload = {
     at: now,
-    accepted: items.filter((i) => String(i.id ?? '').trim()).length,
+    accepted,
     locations: locationCounts,
   };
 
   broadcast({ type: 'update', data: getDashboardState() });
 
   return {
-    accepted: lastRfidUpload.accepted,
+    accepted,
     locations: locationCounts,
   };
+}
+
+/**
+ * Replace every RFID asset at one location.
+ * An empty list clears that location and leaves other rooms alone.
+ */
+export function replaceRfidAtLocation(location, items) {
+  const place = String(location ?? '').trim() || 'Unknown';
+  const now = new Date().toISOString();
+  const locationCounts = {};
+
+  dropRfidAtLocations(new Set([place]));
+
+  let accepted = 0;
+  for (const item of items || []) {
+    if (storeRfidItem({ ...item, location: place }, now, locationCounts)) accepted++;
+  }
+
+  lastRfidUpload = {
+    at: now,
+    accepted,
+    locations: accepted ? locationCounts : { [place]: 0 },
+    source: 'fixed-reader',
+  };
+
+  broadcast({ type: 'update', data: getDashboardState() });
+
+  return { accepted, locations: locationCounts };
 }
 
 function normalizeRfidPayload(body) {
@@ -533,7 +579,7 @@ function buildRfidAssets() {
     location: item.location,
     icon: 'asset',
     mac: item.id,
-    rssi: null,
+    rssi: item.rssi ?? null,
     tamper: null,
     distance: '-',
     distanceMin: null,
@@ -544,6 +590,9 @@ function buildRfidAssets() {
     live: false,
     source: 'RFID',
     category: item.description || 'RFID Asset',
+    tid: item.tid || '',
+    antenna: item.antenna ?? null,
+    readCount: item.count ?? null,
   }));
 }
 
