@@ -572,7 +572,7 @@ body {
 
 .floor-map {
   position: relative;
-  height: 420px;
+  height: 560px;
   margin: 1rem 1.25rem 1.25rem;
   background:
     linear-gradient(90deg, var(--map-grid) 1px, transparent 1px),
@@ -591,26 +591,26 @@ body {
 }
 
 .east-wing {
-  left: 8%;
-  top: 12%;
-  width: 42%;
-  height: 55%;
+  left: 3%;
+  top: 2%;
+  width: 60%;
+  height: 70%;
   background: rgba(59, 158, 255, 0.05);
 }
 
 .west-wing {
-  right: 8%;
-  top: 12%;
-  width: 35%;
-  height: 35%;
+  right: 3%;
+  top: 2%;
+  width: 32%;
+  height: 30%;
   background: rgba(167, 139, 250, 0.05);
 }
 
 .other-zones {
-  left: 8%;
-  bottom: 8%;
-  right: 8%;
-  height: 22%;
+  left: 3%;
+  bottom: 2%;
+  right: 3%;
+  height: 20%;
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
@@ -620,12 +620,12 @@ body {
 
 /* Reserve lower strip for RFID room labels so they never cover map markers */
 .floor-map.has-rfid .other-zones {
-  bottom: 14%;
-  height: 16%;
+  bottom: 11%;
+  height: 15%;
 }
 
 .floor-map.has-rfid .east-wing {
-  height: 48%;
+  height: 62%;
 }
 
 .zone-label {
@@ -731,6 +731,8 @@ body {
   background: var(--bg);
   padding: 0.1rem 0.35rem;
   border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .motion-pulse {
@@ -1169,6 +1171,6 @@ body {
   }
 
   .floor-map {
-    height: 320px;
+    height: 460px;
   }
 }

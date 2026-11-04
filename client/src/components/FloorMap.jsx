@@ -1,15 +1,37 @@
 import AssetIcon from './AssetIcon';
 
-function getPosition(asset, index, total, { reserveBottom = false } = {}) {
-  if (asset.live && asset.distanceEstimate != null) {
-    const pct = Math.min(85, Math.max(15, 15 + asset.distanceEstimate * 12));
-    const angle = (index / Math.max(total, 1)) * Math.PI * 2;
-    return {
-      left: `${50 + Math.cos(angle) * pct * 0.35}%`,
-      top: `${50 + Math.sin(angle) * pct * 0.3}%`,
-    };
-  }
+/** Slots around the room, clear of the gateway in the center. */
+function eastWingSlot(index, total) {
+  const layouts = {
+    1: [{ left: '50%', top: '26%' }],
+    2: [
+      { left: '28%', top: '34%' },
+      { left: '72%', top: '34%' },
+    ],
+    3: [
+      { left: '24%', top: '30%' },
+      { left: '76%', top: '30%' },
+      { left: '50%', top: '76%' },
+    ],
+    4: [
+      { left: '24%', top: '28%' },
+      { left: '76%', top: '28%' },
+      { left: '24%', top: '74%' },
+      { left: '76%', top: '74%' },
+    ],
+  };
 
+  if (layouts[total]) return layouts[total][index];
+
+  const columns = Math.ceil(total / 2);
+  const row = index < columns ? 0 : 1;
+  const column = row === 0 ? index : index - columns;
+  const inRow = row === 0 ? columns : total - columns;
+  const left = 16 + ((column + 0.5) / inRow) * 68;
+  return { left: `${left}%`, top: row === 0 ? '28%' : '76%' };
+}
+
+function getPosition(asset, _index, _total, { reserveBottom = false } = {}) {
   // Keep demo markers above the RFID strip when it is visible
   const demoPositions = reserveBottom
     ? {
@@ -63,7 +85,9 @@ function LiveMarker({ asset, style }) {
 
 export default function FloorMap({ assets, room, rfidLocations }) {
   const liveAssets = assets?.filter((a) => a.live) || [];
-  const room101Live = liveAssets.filter(isRoom101Asset);
+  const room101Live = liveAssets
+    .filter(isRoom101Asset)
+    .sort((a, b) => String(a.asset).localeCompare(String(b.asset)));
   const warehouseLive = liveAssets.filter(isWarehouseAsset);
   const otherLive = liveAssets.filter((a) => !isRoom101Asset(a) && !isWarehouseAsset(a));
   const demoAssets = assets?.filter((a) => !a.live && a.source !== 'RFID') || [];
@@ -96,7 +120,7 @@ export default function FloorMap({ assets, room, rfidLocations }) {
               <LiveMarker
                 key={asset.id}
                 asset={asset}
-                style={getPosition(asset, i, room101Live.length)}
+                style={eastWingSlot(i, room101Live.length)}
               />
             ))}
 
