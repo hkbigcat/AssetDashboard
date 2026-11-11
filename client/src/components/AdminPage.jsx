@@ -1,13 +1,20 @@
 import { useTheme } from '../hooks/useTheme';
 
-function formatBattery(battery) {
-  if (battery == null) return '—';
-  return `${battery}%`;
+function formatBattery(sensor) {
+  if (sensor?.batteryLabel) return sensor.batteryLabel;
+  if (sensor?.battery == null) return '—';
+  return `${sensor.battery}%`;
 }
 
 function TypeBadge({ type }) {
   const className =
-    type === 'Motion' ? 'motion' : type === 'Door' ? 'door' : 'beacon';
+    type === 'Motion'
+      ? 'motion'
+      : type === 'Door'
+        ? 'door'
+        : type === 'Ambient Light'
+          ? 'ambient'
+          : 'beacon';
   return <span className={`admin-type-badge ${className}`}>{type}</span>;
 }
 
@@ -117,7 +124,7 @@ export default function AdminPage({ admin }) {
                     <td>
                       <TypeBadge type={sensor.type} />
                     </td>
-                    <td className="mono">{formatBattery(sensor.battery)}</td>
+                    <td className="mono">{formatBattery(sensor)}</td>
                   </tr>
                 ))
               )}

@@ -16,7 +16,8 @@ export function rssiToDistance(rssi, txPower = TX_POWER_DEFAULT) {
 export function formatDistanceRange(distance) {
   if (distance == null) return { label: 'Unknown', min: null, max: null };
   const min = Math.max(0.1, Math.round((distance * 0.85) * 10) / 10);
-  const max = Math.round((distance * 1.15) * 10) / 10;
+  let max = Math.round((distance * 1.15) * 10) / 10;
+  if (max < min) max = min;
   return {
     label: `${min}-${max} m`,
     min,
@@ -192,7 +193,8 @@ function hexToBytes(hex) {
 
 /**
  * Minew manufacturer-specific data (company ID 0x0639).
- * Supports Connect V3 info (CA 00), combination (CA 03), and classic S4 door frames.
+ * Supports Connect V3 info (CA 00), combination (CA 03), sensor (CA 1B),
+ * and classic S4 door frames.
  * Manufacturer payload is the bytes after company ID (little-endian 39 06).
  *
  * S4 Smart Door Sensor Data Frame V004:
@@ -287,6 +289,42 @@ export function parseMinewManufacturerData(mfgHex) {
       return result;
     }
     return null;
+  }
+
+  // Connect V3 sensor frame CA 1B — MTB15 ambient-light harvesting label.
+  // Payload offsets are after the company ID. Encryption flag in byte 2 bit 7.
+  // Unencrypted body: battery voltage (mV, BE), SOC temperature (8.8 °C), RSSI at 1 m.
+  if (frameType === 'ca' && frameVersion === 0x1b) {
+    if (bytes.length < 18) return null;
+
+    const flagByte = bytes[2];
+    const encrypted = (flagByte & 0x80) !== 0;
+    const productId = (bytes[3] << 8) | bytes[4];
+    const embeddedMac = macBytesLeToHex(bytes.slice(6, 12));
+
+    let batteryVoltageMv = null;
+    let temperature = null;
+    let txPower = null;
+    if (!encrypted) {
+      batteryVoltageMv = (bytes[12] << 8) | bytes[13];
+      let rawTemp = (bytes[14] << 8) | bytes[15];
+      if (rawTemp & 0x8000) rawTemp -= 0x10000;
+      temperature = Math.round((rawTemp / 256) * 10) / 10;
+      const measured = bytes[17];
+      txPower = measured > 127 ? measured - 256 : measured;
+    }
+
+    return {
+      type: 'ambient-light',
+      protocol: 'minew-mtb15',
+      productId,
+      mac: embeddedMac,
+      encrypted,
+      batteryVoltageMv: Number.isFinite(batteryVoltageMv) ? batteryVoltageMv : null,
+      temperature: Number.isFinite(temperature) ? temperature : null,
+      txPower,
+      rssi_at_xm: txPower,
+    };
   }
 
   // Classic S4 door alarm frame: a4 01 battery magnet antiDisassembly alarm ...

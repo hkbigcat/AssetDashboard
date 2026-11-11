@@ -37,6 +37,20 @@
       "asset": "Entrance A",
       "location": "East Wing - Room 101",
       "icon": "door"
+    },
+    {
+      "sensor": "Ambient Light",
+      "mac_address": "c203030052c8",
+      "asset": "Synology DiskStation DS225+",
+      "location": "East Wing - Room 101",
+      "icon": "asset"
+    },
+    {
+      "sensor": "Ambient Light",
+      "mac_address": "c203030052c9",
+      "asset": "Synology DiskStation DS1825+",
+      "location": "East Wing - Room 101",
+      "icon": "asset"
     }
   ]
 }

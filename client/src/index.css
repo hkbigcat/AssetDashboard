@@ -1126,6 +1126,11 @@ body {
   color: var(--rfid);
 }
 
+.admin-type-badge.ambient {
+  background: rgba(251, 191, 36, 0.18);
+  color: var(--warning);
+}
+
 .admin-settings {
   display: flex;
   flex-wrap: wrap;

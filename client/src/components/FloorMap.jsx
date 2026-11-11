@@ -19,6 +19,13 @@ function eastWingSlot(index, total) {
       { left: '24%', top: '74%' },
       { left: '76%', top: '74%' },
     ],
+    5: [
+      { left: '20%', top: '30%' },
+      { left: '50%', top: '22%' },
+      { left: '80%', top: '30%' },
+      { left: '28%', top: '78%' },
+      { left: '72%', top: '78%' },
+    ],
   };
 
   if (layouts[total]) return layouts[total][index];

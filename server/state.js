@@ -20,7 +20,9 @@ const demoAssets = JSON.parse(
 const gateway = assetsConfig.assets.find((a) => a.sensor === 'Gateway');
 const pirSensor = assetsConfig.assets.find((a) => a.sensor === 'PIR');
 const doorSensors = assetsConfig.assets.filter((a) => a.sensor === 'Door');
-const beacons = assetsConfig.assets.filter((a) => a.sensor === 'Beacon');
+const beacons = assetsConfig.assets.filter(
+  (a) => a.sensor === 'Beacon' || a.sensor === 'Ambient Light'
+);
 
 const MOTION_HOLD_MS = 120_000;
 
@@ -72,7 +74,6 @@ for (const beacon of beacons) {
     location: beacon.location || gateway?.location,
     icon: beacon.icon || 'asset',
     rssi: null,
-    tamper: false,
     battery: null,
     distance: null,
     distanceRange: null,
@@ -81,10 +82,20 @@ for (const beacon of beacons) {
     url: null,
     lastSeen: null,
     live: true,
+    kind: beacon.sensor === 'Ambient Light' ? 'ambient-light' : 'beacon',
+    temperature: null,
+    batteryVoltageMv: null,
+    tamper: beacon.sensor === 'Ambient Light' ? null : false,
   };
 }
 
-const RANGING_FRAME_TYPES = new Set(['ib', 'tp', 'eddystone-url', 'eddystone-uid']);
+const RANGING_FRAME_TYPES = new Set([
+  'ib',
+  'tp',
+  'eddystone-url',
+  'eddystone-uid',
+  'ambient-light',
+]);
 
 let mqttConnected = false;
 let lastMqttMessage = null;
@@ -221,6 +232,11 @@ export function processReading(reading, { deferMotion = false } = {}) {
   if (parsed.type === 'tp') {
     beacon.tamper = parsed.tamper ?? parsed.demolished ?? false;
     beacon.battery = parsed.battery ?? beacon.battery;
+  }
+
+  if (parsed.type === 'ambient-light') {
+    if (parsed.temperature != null) beacon.temperature = parsed.temperature;
+    if (parsed.batteryVoltageMv != null) beacon.batteryVoltageMv = parsed.batteryVoltageMv;
   }
 
   if (parsed.type === 'eddystone-url' && parsed.url) {
@@ -447,6 +463,11 @@ export function setMqttConnected(connected) {
 
 const DEFAULT_SENSOR_LOCATION = 'East Wing - Room 101';
 
+function formatVoltage(millivolts) {
+  if (millivolts == null || !Number.isFinite(Number(millivolts))) return null;
+  return `${(Number(millivolts) / 1000).toFixed(2)} V`;
+}
+
 function formatBatteryLevel(battery) {
   if (battery == null || Number.isNaN(Number(battery))) return null;
   const n = Number(battery);
@@ -484,8 +505,9 @@ function buildAdminInventory() {
     sensors.push({
       mac: beacon.mac,
       location: beacon.location || location,
-      type: 'Location Beacon',
-      battery: formatBatteryLevel(beacon.battery),
+      type: beacon.kind === 'ambient-light' ? 'Ambient Light' : 'Location Beacon',
+      battery: beacon.kind === 'ambient-light' ? null : formatBatteryLevel(beacon.battery),
+      batteryLabel: beacon.kind === 'ambient-light' ? formatVoltage(beacon.batteryVoltageMv) : null,
       lastSeen: beacon.lastSeen,
       name: beacon.asset,
     });
@@ -503,7 +525,7 @@ function buildAdminInventory() {
   }
 
   sensors.sort((a, b) => {
-    const typeOrder = { Motion: 0, Door: 1, 'Location Beacon': 2 };
+    const typeOrder = { Motion: 0, Door: 1, 'Location Beacon': 2, 'Ambient Light': 3 };
     const ta = typeOrder[a.type] ?? 9;
     const tb = typeOrder[b.type] ?? 9;
     if (ta !== tb) return ta - tb;
@@ -514,6 +536,13 @@ function buildAdminInventory() {
 }
 
 function liveCategory(beacon) {
+  if (beacon.kind === 'ambient-light') {
+    const parts = ['Ambient Light'];
+    if (beacon.temperature != null) parts.push(`${Number(beacon.temperature).toFixed(1)}°C`);
+    const voltage = formatVoltage(beacon.batteryVoltageMv);
+    if (voltage) parts.push(voltage);
+    return parts.join(' · ');
+  }
   if (beacon.frameType === 'eddystone-url' || beacon.frameType === 'eddystone-uid') {
     return 'Location Beacon (Eddystone)';
   }
@@ -568,6 +597,8 @@ function buildLiveAssets() {
     category: liveCategory(beacon),
     frameType: beacon.frameType,
     url: beacon.url,
+    temperature: beacon.temperature,
+    batteryVoltageMv: beacon.batteryVoltageMv,
   }));
 }
 
