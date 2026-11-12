@@ -13,7 +13,7 @@
   },
   {
     "name": "E2806894000040335226F0A1",
-    "description": "Apple Mac mini (M4 Pro)"
+    "description": "Apple Mac mini (M4 Pro) - 4418U8"
   },
   {
     "name": "E2801191A50400788C77C695",
@@ -21,39 +21,39 @@
   },
   {
     "name": "E2806894000050335226F4A1",
-    "description": "Synology DiskStation DS225+"
+    "description": "Synology DiskStation DS225+ - 4418U8"
   },
   {
     "name": "E28068940000401EE6A1913F",
-    "description": "Chloe's Lenovo ThinkBook 16 Gen 8  Laptop"
+    "description": "Chloe's Lenovo ThinkBook 16 Gen 8  Laptop - 9827U8"
   },
   {
     "name": "E2806894000050335226ECA1",
-    "description": "Chloe's Dell Alienware 32 AW3225QF QD-OLED Monitor"
+    "description": "Chloe's Dell Alienware 32 AW3225QF QD-OLED Monitor - 4418U8"
   },
   {
     "name": "E2806894000040335226E8A1",
-    "description": "SONY ZV-E10 II Camera"
+    "description": "SONY ZV-E10 II Camera - 4418U8"
   },
   {
     "name": "E2806894000050335226E0A1",
-    "description": "RODE Wireless GO III"
+    "description": "RODE Wireless GO III -4418U8"
   },
   {
     "name": "E2806894000040335226E4A1",
-    "description": "ASUS GeForce RTX 5080 16GB GDDRr7 Noctua OC Edition"
+    "description": "ASUS GeForce RTX 5080 16GB GDDRr7 Noctua OC Edition - 4418U8"
   },
   {
     "name": "E2801191A50400788C77C685",
-    "description": "Canon PIXMA E470"
+    "description": "Canon PIXMA E470 - SHOOLA"
   },
   {
     "name": "E2806894000050335226DCA1",
-    "description": "Canon MAXIFY GX7170"
+    "description": "Canon MAXIFY GX7170 - 4418U8"
   },
   {
     "name": "E2806894000040335226D8A1",
-    "description": "Dell Pro Precision 9 T2 桌上型電腦"
+    "description": "Dell Pro Precision 9 T2 桌上型電腦 - 4418U8"
   },
   {
     "name": "E280689400005033522700A1",
@@ -61,19 +61,19 @@
   },
   {
     "name": "E2801191A50400788C77C6A5",
-    "description": "Alienware Aurora 遊戲專用桌上型電腦"
+    "description": "Alienware Aurora 遊戲專用桌上型電腦 - SHOOLA"
   },
   {
     "name": "E2801191A50400788C77C6C5",
-    "description": "Dell 24 多合一電腦"
+    "description": "Dell 24 多合一電腦 - SHOOLA"
   },
   {
     "name": "E2801191A50400788C77C6B5",
-    "description": "Apple MacBook Neo Yellow"
+    "description": "Apple MacBook Neo Yellow - SHOOLA"
   },
   {
     "name": "E28068940000401EE6A1B53F",
-    "description": "Apple Mac Sudio (M4 Max)"
+    "description": "Apple Mac Sudio (M4 Max) - 9827U8"
   },
   {
     "name": "E28068940000401EE6A1B93F",
@@ -81,23 +81,99 @@
   },
   {
     "name": "E280117000000217995E3B9A",
-    "description": "iPhone 18 Pro Max Burgundy Red"
+    "description": "iPhone 18 Pro Max Burgundy Red - 6535抗"
+  },
+  {
+    "name": "E280117000000217995E3B7A",
+    "description": "iPhone 18 Pro Max Silver - 6535抗"
   },
   {
     "name": "E280117000000217995E3BAB",
-    "description": "iPhone 18 Pro Max Glacier Blue"
+    "description": "iPhone 18 Pro Max Glacier Blue - 6535抗"
   },
   {
     "name": "E280117000000217995E3BCB",
-    "description": "iPhone 18 Pro Max Silver"
+    "description": "iPhone 18 Pro Max Silver - 6535抗"
   },
   {
     "name": "E28011700000021DC82EF051",
-    "description": "iPhone 18 Pro Max Black"
+    "description": "iPhone 18 Pro Max Black - 6025抗"
   },
   {
     "name": "E28011700000021DC82EF055",
-    "description": "iPhone 18 Burgundy Red"
+    "description": "iPhone 18 Burgundy Red - 6025抗"
+  },
+  {
+    "name": "E28011700000021DC82EF053",
+    "description": "iPhone 18 Burgundy Silver - 6025抗"
+  },
+  {
+    "name": "E28011700000021DC82EF15F",
+    "description": "iPhone 18 Burgundy Gold - 6025抗"
+  },  
+  {
+    "name": "E28068940000401EE6A1AD3F",
+    "description": "iPhone 18 Pro Max Glacier Blue - 9827U8"
+  },
+  {
+    "name": "E28068940000501EE6A1993F",
+    "description": "iPhone 18 Pro Max White - 9827U8"
+  },
+  {
+    "name": "E28068940000401EE6A1A13F",
+    "description": "iPhone 18 Pro Max Orange - 9827U8"
+  },
+  {
+    "name": "E28068940000401EE6A19D3F",
+    "description": "iPhone 18 Pro Max Gold - 9827U8"
+  },
+  {
+    "name": "E28068940000501EE6A1953F",
+    "description": "iPhone 18 Pro Max Silver - 9827U8"
+  },
+  {
+    "name": "E28068940000501EE6A1A53F",
+    "description": "iPhone 18 Pro Max Yellow - 9827U8"
+  },
+  {
+    "name": "E28069150000501DC3179DD8",
+    "description": "iPhone 17 Gold - 8040抗"
+  },
+  {
+    "name": "E28069150000401DC3179DD9",
+    "description": "iPhone 17 Silver - 8040抗"
+  },
+  {
+    "name": "E28069150000501DC3179DDB",
+    "description": "iPhone 17 Red - 8040抗"
+  },
+  {
+    "name": "E28069150000401DC3179DDA",
+    "description": "iPhone 17 Yellow - 8040抗"
+  },
+  {
+    "name": "E20047005CB06422AF05010D",
+    "description": "Aten UPS 1 - mtb06"
+  },
+  {
+    "name": "E200470032706422AC61010C",
+    "description": "Aten UPS 2 - mtb06"
+  },
+  {
+    "name": "E28069150000700FA3C5E26C",
+    "description": "Yeti Nano 2 - 7030抗"
+  },
+  {
+    "name": "E28069150000700FA3C5E269",
+    "description": "Yeti Nano 2 - 7030抗"
+  },
+  {
+    "name": "E28069150000700FA3C5E26A",
+    "description": "Yeti Nano 2 - 7030抗"
+  },
+  {
+    "name": "E28069150000600FA3C5E26B",
+    "description": "Yeti Nano 2 - 7030抗"
   }
 ]
 

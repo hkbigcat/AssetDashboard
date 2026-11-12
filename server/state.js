@@ -20,8 +20,13 @@ const demoAssets = JSON.parse(
 const gateway = assetsConfig.assets.find((a) => a.sensor === 'Gateway');
 const pirSensor = assetsConfig.assets.find((a) => a.sensor === 'PIR');
 const doorSensors = assetsConfig.assets.filter((a) => a.sensor === 'Door');
+const LABEL_SENSORS = {
+  'Ambient Light': 'ambient-light',
+  'Smart Label': 'smart-label',
+};
+
 const beacons = assetsConfig.assets.filter(
-  (a) => a.sensor === 'Beacon' || a.sensor === 'Ambient Light'
+  (a) => a.sensor === 'Beacon' || LABEL_SENSORS[a.sensor]
 );
 
 const MOTION_HOLD_MS = 120_000;
@@ -82,10 +87,10 @@ for (const beacon of beacons) {
     url: null,
     lastSeen: null,
     live: true,
-    kind: beacon.sensor === 'Ambient Light' ? 'ambient-light' : 'beacon',
+    kind: LABEL_SENSORS[beacon.sensor] || 'beacon',
     temperature: null,
     batteryVoltageMv: null,
-    tamper: beacon.sensor === 'Ambient Light' ? null : false,
+    tamper: LABEL_SENSORS[beacon.sensor] ? null : false,
   };
 }
 
@@ -505,9 +510,9 @@ function buildAdminInventory() {
     sensors.push({
       mac: beacon.mac,
       location: beacon.location || location,
-      type: beacon.kind === 'ambient-light' ? 'Ambient Light' : 'Location Beacon',
-      battery: beacon.kind === 'ambient-light' ? null : formatBatteryLevel(beacon.battery),
-      batteryLabel: beacon.kind === 'ambient-light' ? formatVoltage(beacon.batteryVoltageMv) : null,
+      type: labelType(beacon.kind) || 'Location Beacon',
+      battery: labelType(beacon.kind) ? null : formatBatteryLevel(beacon.battery),
+      batteryLabel: labelType(beacon.kind) ? formatVoltage(beacon.batteryVoltageMv) : null,
       lastSeen: beacon.lastSeen,
       name: beacon.asset,
     });
@@ -525,7 +530,7 @@ function buildAdminInventory() {
   }
 
   sensors.sort((a, b) => {
-    const typeOrder = { Motion: 0, Door: 1, 'Location Beacon': 2, 'Ambient Light': 3 };
+    const typeOrder = { Motion: 0, Door: 1, 'Location Beacon': 2, 'Ambient Light': 3, 'Smart Label': 4 };
     const ta = typeOrder[a.type] ?? 9;
     const tb = typeOrder[b.type] ?? 9;
     if (ta !== tb) return ta - tb;
@@ -535,9 +540,16 @@ function buildAdminInventory() {
   return { gateways, sensors };
 }
 
+function labelType(kind) {
+  if (kind === 'ambient-light') return 'Ambient Light';
+  if (kind === 'smart-label') return 'Smart Label';
+  return null;
+}
+
 function liveCategory(beacon) {
-  if (beacon.kind === 'ambient-light') {
-    const parts = ['Ambient Light'];
+  const label = labelType(beacon.kind);
+  if (label) {
+    const parts = [label];
     if (beacon.temperature != null) parts.push(`${Number(beacon.temperature).toFixed(1)}°C`);
     const voltage = formatVoltage(beacon.batteryVoltageMv);
     if (voltage) parts.push(voltage);

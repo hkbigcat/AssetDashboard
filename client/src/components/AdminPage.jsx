@@ -14,7 +14,9 @@ function TypeBadge({ type }) {
         ? 'door'
         : type === 'Ambient Light'
           ? 'ambient'
-          : 'beacon';
+          : type === 'Smart Label'
+            ? 'label'
+            : 'beacon';
   return <span className={`admin-type-badge ${className}`}>{type}</span>;
 }
 

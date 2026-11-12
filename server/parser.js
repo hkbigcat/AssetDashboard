@@ -291,7 +291,9 @@ export function parseMinewManufacturerData(mfgHex) {
     return null;
   }
 
-  // Connect V3 sensor frame CA 1B — MTB15 ambient-light harvesting label.
+  // Connect V3 sensor frame CA 1B.
+  // MTB15 ambient-light label is product 0x005F. MTB06 printable label is product 0x001B.
+  // Both use this layout.
   // Payload offsets are after the company ID. Encryption flag in byte 2 bit 7.
   // Unencrypted body: battery voltage (mV, BE), SOC temperature (8.8 °C), RSSI at 1 m.
   if (frameType === 'ca' && frameVersion === 0x1b) {

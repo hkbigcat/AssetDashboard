@@ -51,6 +51,13 @@
       "asset": "Synology DiskStation DS1825+",
       "location": "East Wing - Room 101",
       "icon": "asset"
+    },
+    {
+      "sensor": "Smart Label",
+      "mac_address": "c300008c8121",
+      "asset": "Aten UPS",
+      "location": "East Wing - Room 101",
+      "icon": "asset"
     }
   ]
 }

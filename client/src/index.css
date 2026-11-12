@@ -1131,6 +1131,11 @@ body {
   color: var(--warning);
 }
 
+.admin-type-badge.label {
+  background: rgba(59, 158, 255, 0.15);
+  color: var(--accent);
+}
+
 .admin-settings {
   display: flex;
   flex-wrap: wrap;
